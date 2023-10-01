@@ -25,15 +25,89 @@ server.get('/api/dogs/:id', async (req, res) => {
     try{
         const { id } = req.params
         const dog = await Dog.findById(id)
-        res.status(200).json(dog)
-    } catch(err) {
+        if (!dog) {
+            res.status(404).json({ message: `No dog with id of ${id}` })
+        } else {
+            res.status(200).json(dog)
+        }
+        } catch(err) {
         res.status(500).json({
-            message: `Error fetching dog ${req.params.id}: ${err.message}`})
+            message: `Error fetching dog ${req.params.id}: ${err.message}`
+        })
     }
 })
 // [POST]   /api/dogs     (C of CRUD, create new dog from JSON payload)
+server.post('/api/dogs', async (req, res) => {
+    try{
+        const { name, weight } = req.body
+        if(!name || !weight) {
+            res.status(422).json({
+                message: 'Dog must have a name and a weight.'
+            })
+        } else {
+        const createdDog = await Dog.create({ name, weight })
+        res.status(201).json({
+            message: 'Yay!! You created a dog!!',
+            data: createdDog   
+        })
+    }
+    } catch(err) {
+        res.status(500).json({
+            message: `Error creating dog: ${err.message}`
+        })
+    }
+})
 // [PUT]    /api/dogs/:id (U of CRUD, update dog with :id using JSON payload)
+server.put('/api/dogs/:id', async (req, res) => {
+    try { 
+        const { id } = req.params
+        const { name, weight } = req.body
+        if (!name || !weight) {
+            res.status(422).json({
+                message: 'Dog must have a name and a weight.'
+            })
+        } else {
+            const updatedDog = await Dog.update(id, {name, weight})
+            if (!updatedDog) {
+                res.status(404).json({
+                    message: `dog with id of ${id} not found.`
+                })
+            } else {
+            res.status(200).json({
+                message: `You have successfully update dog at id of ${id}`,
+                data: updatedDog
+            })
+        }
+        }
+
+        
+    } catch(err){
+        res.status(500).json({
+            message: `Error updating dog: ${err.message}`
+        })
+    }
+})
 // [DELETE] /api/dogs/:id (D of CRUD, remove dog with :id)
+server.delete('/api/dogs/:id', async (req, res) => {
+    try {
+        const { id } = req.params
+        const deletedDog = await Dog.delete(id)
+        if(!deletedDog) {
+            res.status(404).json({
+                message: `Dog with id of ${id} cannot be found.`
+            })
+        } else {
+            res.status(200).json({
+                message: `Dog with id of ${id} has been deleted.`,
+                data: deletedDog
+            })
+        }
+    } catch(err) {
+        res.status(500).json({
+            message: `Error deleting dog: ${err.message}`
+        })
+    }
+})
 
 // EXPOSING THE SERVER TO OTHER MODULES
 module.exports = server;
